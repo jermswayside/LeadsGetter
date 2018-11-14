@@ -3,12 +3,14 @@ import requests
 import os
 import os.path
 import csv
-
+import json
+import sys
 
 # Global varibles
 new_fn = 'new_data.csv'
 old_fn = 'archive.csv'
 delta_fn = 'delta.csv'
+lock_fn = 'lock.txt'
 
 
 def get_conf_data():
@@ -30,7 +32,7 @@ def get_conf_data():
 
     s.get(url)
 
-    download_url = "https://www.xpressleadpro.com/portal/public/downloadbytid/1894511/D356DF7FA99849B/csv"
+    download_url = "https://www.xpressleadpro.com/portal/public/downloadbyexid/1894511/csv"
 
     with open(new_fn, 'wb') as out_file:
         data = s.get(download_url)
@@ -118,7 +120,8 @@ def handle_headers(header, value):
             'Neue Blickwinkel': '359661_41929pi_359661_41929_425949',
             'Chiarissimo Uno': '359661_41931pi_359661_41931_425951',
             'Chiarissimo Due': '359661_41933pi_359661_41933_425953',
-            'Scandite Muros': '359661_41935pi_359661_41935_425955'
+            'Scandite Muros': '359661_41935pi_359661_41935_425955',
+            'EntreCultures 1 - Unit 1 - French': '359661_42115pi_359661_42115_426425'
 
         }
 
@@ -144,8 +147,7 @@ def handle_headers(header, value):
         }
         return map_from_to(value, print_values)
 
-    # This is actually DIGITAL TOOLS because Xpress Leads is terrible.
-    if header == "The next adoption-related deadline will be":
+    if header == "Digital tools in your classroom":
         digital_tools_values = {
             '1 to 1': '359661_41983pi_359661_41983_426031',
             '1 to 2 or more': '359661_41983pi_359661_41983_426033',
@@ -155,13 +157,12 @@ def handle_headers(header, value):
 
         return map_from_to(value, digital_tools_values)
 
-    # This is actually THE NEXT ADOPTION-RELATED DEADLINE WILL BE because Xpress Leads is terrible
-    if header == "Digital tools in your classroom":
+    if header == "The next adoption-related deadline will be":
         deadline_values = {
-            'Before 2019': '',
-            'Spring 2019': '',
-            'Spring 2020': '',
-            'Fall 2019': ''
+            'Before 2019': '359661_41987pi_359661_41987_426393',
+            'Spring 2019': '359661_41987pi_359661_41987_426395',
+            'Spring 2020': '359661_41987pi_359661_41987_426397',
+            'Fall 2019': '359661_41987pi_359661_41987_426399'
         }
 
         return map_from_to(value, deadline_values)
@@ -169,18 +170,15 @@ def handle_headers(header, value):
     if header == 'Wayside should stay in touch about':
         in_touch_values = {
             'Wayside newsletter subscription': '359661_41959pi_359661_41959_426437',
-            'EntreCultures 1a 1b - French': '359661_41963pi_359661_41963_425983',
-            'EntreCultures 1  - French': '',
-            'EntreCultures 2 and or 3 - French': '',
+            'EntreCultures 123 - Levels 1 and 2 coming 2019': '359661_41963pi_359661_41963_425983',
             'Updates on EntreCulturas 4 - Spanish': '359661_42127pi_359661_42127_426439',
+            'Updates on German 1, 2, 3': '359661_41965pi_359661_41965_425985',
             'Learning Site Updates': '359661_42129pi_359661_42129_426441',
-            'Updates on German 1, 2, 3': '359661_41965pi_359661_41965_425985'
         }
 
         return map_from_to(value, in_touch_values)
 
-    # This is actually POST-ACTFL SHIPMENT REQUESTED
-    if header == 'If you had your wish, Wayside would create':
+    if header == 'Post-ACTFL shipment requested':
         create_values = {
             'EntreCulturas 1a': '359661_42135pi_359661_42135_426447',
             'EntreCulturas 1b': '359661_42137pi_359661_42137_426449',
@@ -195,13 +193,13 @@ def handle_headers(header, value):
             'Neue Blickwinkel': '359661_42155pi_359661_42155_426467',
             'Chiarissimo Uno': '359661_42157pi_359661_42157_426469',
             'Chiarissimo Due': '359661_42159pi_359661_42159_426471',
-            'Scandite Muros': '359661_42161pi_359661_42161_426473'
+            'Scandite Muros': '359661_42161pi_359661_42161_426473',
+            'EntreCultures 1 print sampler of unit 1': '359661_44474pi_359661_44474_448870'
         }
 
         return map_from_to(value, create_values)
 
-    # This is actually IF YOU HAD YOUR WISH, WAYSIDE WOULD CREATE
-    if header == 'OPTIONAL Non Sales Follow Up':
+    if header == 'If you had your wish, Wayside would create':
         sales_values = {
             'Chiarissimo Tre': '359661_41967pi_359661_41967_425987',
             'Elementary French': '359661_41969pi_359661_41969_425989',
@@ -260,11 +258,9 @@ def push_data_to(fn, url_pardot):
 
             'If you had your wish, Wayside would create': '',
 
-            # This is actually OPTIONAL NON SALES FOLLOW UP
-            'Post-ACTFL shipment requested': '359661_42705pi_359661_42705',
+            'Post-ACTFL shipment requested': '',
 
-            # This is actually IF YOU HAD YOUR WISH, WAYSIDE WOULD CREATE
-            'OPTIONAL Non Sales Follow Up': '',
+            'OPTIONAL Non Sales Follow Up': '359661_42705pi_359661_42705',
 
             'Notes': '359661_41991pi_359661_41991',
 
@@ -298,7 +294,7 @@ def push_data_to(fn, url_pardot):
             all_data.append(pardot_data)
 
         # Enter POST request here
-        for data in all_data[-1:]:
+        for data in all_data:
             r = requests.post(url_pardot, data=data)
             print(r.status_code)
 
@@ -311,16 +307,16 @@ def push_data_to_ls(fn, url_ls):
 
         for row in reader:
             data = {
-                'key': "EOQ89SMVP3K",
-                'campaign': "email",
+                'key': 'EOQ89SMVP3K',
+                'campaign': 'email',
                 'textbook': [],
-                'email': "",
-                'firstname': "",
-                'lastname': "",
-                'school': "",
-                'city': "",
-                'state': "",
-                'zipCode': ""
+                'email': '',
+                'firstname': '',
+                'lastname': '',
+                'school': '',
+                'city': '',
+                'state': '',
+                'zipCode': ''
             }
 
             for header in headers:
@@ -329,21 +325,21 @@ def push_data_to_ls(fn, url_ls):
                 if header == 'Email 30 day access to these programs':
                     all_textbooks = curr_val.split("|")
                     textbook_ids = {
-                        'EntreCultures Sampler': '',
-                        'EntreCulturas 1a': '',
-                        'EntreCulturas 1b': '',
-                        'EntreCulturas 1': '13463',
-                        'EntreCulturas 2': '13507',
-                        'EntreCulturas 3': '13518',
+                        'EntreCulturas 1a - Spanish': '8728265',
+                        'EntreCulturas 1b - Spanish': '8728473',
+                        'EntreCulturas 1 - Spanish': '13463',
+                        'EntreCulturas 2 - Spanish': '13507',
+                        'EntreCulturas 3 - Spanish': '13518',
                         'Tejidos': '1955',
                         'Triangulo Aprobado': '3551',
-                        'Triangulo APreciado': '',
+                        'Triangulo APreciado': '6250713',
                         'Azulejo': '3',
                         'APprenons': '11138',
                         'Neue Blickwinkel': '12741',
                         'Chiarissimo Uno': '6698',
                         'Chiarissimo Due': '12271',
                         'Scandite Muros': '13435',
+                        'EntreCultures 1 - Unit 1 - French': '4627944'
                     }
 
                     for t in all_textbooks:
@@ -373,8 +369,9 @@ def push_data_to_ls(fn, url_ls):
                     data['zipCode'] = curr_val
 
             all_data.append(data)
-    for d in all_data[-1:]:
-        r = requests.post(url_ls, data=d)
+    for d in all_data:
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        r = requests.post(url_ls, data=json.dumps(d), headers=headers)
         print(r.text)
 
 
@@ -387,24 +384,32 @@ def cleanup():
 
     os.rename(new_fn, old_fn)
 
+    os.remove(lock_fn)
+
 
 def main():
+    if os.path.isfile(lock_fn) is not True:
+        print('Lock file doesn\'t exist, process isn\'t currently running')
+        open(lock_fn, 'w+')
+        # Getting fresh data
+        get_conf_data()
 
-    # Getting fresh data
-    get_conf_data()
-    
-    # Parsing through new data to check for duplicates between "new_data.csv" and "archive.csv" if "archive.csv" exists
-    # Returns file name to process
-    parsed_data_fn = get_just_new_data_from()
-    
-    # Push data to Pardot
-    push_data_to(parsed_data_fn, 'http://www2.waysidepublishing.com/l/359661/2018-10-22/dn4z2b')
+        # Parsing through new data to check for duplicates between
+        # "new_data.csv" and "archive.csv" if "archive.csv" exists
+        # Returns file name to process
+        parsed_data_fn = get_just_new_data_from()
 
-    # Push data to the LS
-    push_data_to_ls(parsed_data_fn, 'https://learningsite.waysidepublishing.com/api/user/')
+        # Push data to Pardot
+        push_data_to(parsed_data_fn, 'http://www2.waysidepublishing.com/l/359661/2018-10-22/dn4z2b')
 
-    # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
-    cleanup()   
+        # Push data to the LS
+        push_data_to_ls(parsed_data_fn, 'https://stagelearningsite.waysidepublishing.com/api/user/')
+
+        # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
+        cleanup()
+    else:
+        print('Lock file exists, process currently running')
+        sys.exit(0)
 
 
 main()

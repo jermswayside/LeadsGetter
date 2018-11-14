@@ -396,12 +396,12 @@ def cleanup():
 
     os.rename(new_fn, old_fn)
 
-    log()
-
     os.remove(lock_fn)
 
 
 def main():
+    log()
+
     if os.path.isfile(lock_fn) is not True:
         print('Lock file doesn\'t exist, process isn\'t currently running')
         open(lock_fn, 'w+')

@@ -376,54 +376,63 @@ def push_data_to_ls(fn, url_ls):
         print(r.text)
 
 
-def log():
+def log(text):
     append_log = open("log.txt", "r")
     original_log = append_log.read()
     append_log.close()
 
     append_log = open("log.txt", "w")
     append_log.write("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    if text:
+        append_log.write(text)
     append_log.write(original_log)
     append_log.close()
 
 
-def cleanup():
+def cleanup(errno):
     if os.path.isfile(old_fn):
         os.remove(old_fn)
 
     if os.path.isfile(delta_fn):
         os.remove(delta_fn)
 
-    os.rename(new_fn, old_fn)
+    if errno is 0:
+        os.rename(new_fn, old_fn)
 
     os.remove(lock_fn)
 
 
 def main():
-    log()
+    log(None)
 
-    if os.path.isfile(lock_fn) is not True:
-        print('Lock file doesn\'t exist, process isn\'t currently running')
-        open(lock_fn, 'w+')
-        # Getting fresh data
-        get_conf_data()
+    try:
+        if os.path.isfile(lock_fn) is not True:
+            print('Lock file doesn\'t exist, process isn\'t currently running')
+            open(lock_fn, 'w+')
+            # Getting fresh data
+            get_conf_data()
 
-        # Parsing through new data to check for duplicates between
-        # "new_data.csv" and "archive.csv" if "archive.csv" exists
-        # Returns file name to process
-        parsed_data_fn = get_just_new_data_from()
+            # Parsing through new data to check for duplicates between
+            # "new_data.csv" and "archive.csv" if "archive.csv" exists
+            # Returns file name to process
+            parsed_data_fn = get_just_new_data_from()
 
-        # Push data to Pardot
-        push_data_to(parsed_data_fn, 'http://www2.waysidepublishing.com/l/359661/2018-10-22/dn4z2b')
+            # Push data to Pardot
+            push_data_to(parsed_data_fn, 'http://www2.waysidepublishing.com/l/359661/2018-10-22/dn4z2b')
 
-        # Push data to the LS
-        push_data_to_ls(parsed_data_fn, 'https://stagelearningsite.waysidepublishing.com/api/user/')
+            # Push data to the LS
+            push_data_to_ls(parsed_data_fn, 'https://stagelearningsite.waysidepublishing.com/api/user/')
 
-        # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
-        cleanup()
-    else:
-        print('Lock file exists, process currently running')
-        sys.exit(0)
+            # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
+            cleanup(0)
+        else:
+            print('Lock file exists, process currently running')
+            sys.exit(0)
+
+    except Exception as error:
+        log(error)
+        cleanup(1)
+        sys.exit(1)
 
 
 main()

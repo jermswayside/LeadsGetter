@@ -1,4 +1,5 @@
 import urllib.request
+import datetime
 import requests
 import os
 import os.path
@@ -375,6 +376,17 @@ def push_data_to_ls(fn, url_ls):
         print(r.text)
 
 
+def log():
+    append_log = open("log.txt", "r")
+    original_log = append_log.read()
+    append_log.close()
+
+    append_log = open("log.txt", "w")
+    append_log.write("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    append_log.write(original_log)
+    append_log.close()
+
+
 def cleanup():
     if os.path.isfile(old_fn):
         os.remove(old_fn)
@@ -383,6 +395,8 @@ def cleanup():
         os.remove(delta_fn)
 
     os.rename(new_fn, old_fn)
+
+    log()
 
     os.remove(lock_fn)
 

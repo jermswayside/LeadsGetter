@@ -421,7 +421,7 @@ def main():
             push_data_to(parsed_data_fn, 'http://www2.waysidepublishing.com/l/359661/2018-10-22/dn4z2b')
 
             # Push data to the LS
-            push_data_to_ls(parsed_data_fn, 'https://stagelearningsite.waysidepublishing.com/api/user/')
+            push_data_to_ls(parsed_data_fn, 'https://learningsite.waysidepublishing.com/api/user/')
 
             # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
             cleanup(0)

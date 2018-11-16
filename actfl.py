@@ -265,7 +265,7 @@ def push_data_to(fn, url_pardot):
 
             'Notes': '359661_41991pi_359661_41991',
 
-            'Lead_Rating': '',
+            'Lead Rating': '',
         }
 
         all_data = []
@@ -295,9 +295,13 @@ def push_data_to(fn, url_pardot):
             all_data.append(pardot_data)
 
         # Enter POST request here
+        curr_data = 1
+        log('Filling out Pardot form... \n')
         for data in all_data:
+            log('%s/%s users\n' % (curr_data, len(all_data)))
             r = requests.post(url_pardot, data=data)
-            print(r.status_code)
+            log("Successfully finished.\n")
+            curr_data += 1
 
 
 def push_data_to_ls(fn, url_ls):
@@ -326,8 +330,8 @@ def push_data_to_ls(fn, url_ls):
                 if header == 'Email 30 day access to these programs':
                     all_textbooks = curr_val.split("|")
                     textbook_ids = {
-                        'EntreCulturas 1a - Spanish': '8728265',
-                        'EntreCulturas 1b - Spanish': '8728473',
+                        'EntreCulturas 1a - Spanish': '9122772',
+                        'EntreCulturas 1b - Spanish': '9123315',
                         'EntreCulturas 1 - Spanish': '13463',
                         'EntreCulturas 2 - Spanish': '13507',
                         'EntreCulturas 3 - Spanish': '13518',
@@ -370,22 +374,21 @@ def push_data_to_ls(fn, url_ls):
                     data['zipCode'] = curr_val
 
             all_data.append(data)
+
+    curr_d = 1
+    log('Adding samples for users...\n')
     for d in all_data:
+        log("%s/%s users\n" % (curr_d, len(all_data)))
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
         r = requests.post(url_ls, data=json.dumps(d), headers=headers)
+        log("Successfully finished.\n")
         print(r.text)
+        curr_d += 1
 
 
 def log(text):
-    append_log = open("log.txt", "r")
-    original_log = append_log.read()
-    append_log.close()
-
-    append_log = open("log.txt", "w")
-    append_log.write("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
-    if text:
-        append_log.write(text)
-    append_log.write(original_log)
+    append_log = open("log.txt", "a")
+    append_log.write(text)
     append_log.close()
 
 
@@ -403,7 +406,7 @@ def cleanup(errno):
 
 
 def main():
-    log(None)
+    log("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
 
     try:
         if os.path.isfile(lock_fn) is not True:
@@ -426,7 +429,7 @@ def main():
             # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
             cleanup(0)
         else:
-            print('Lock file exists, process currently running')
+            log('Lock file exists, process currently running')
             sys.exit(0)
 
     except Exception as error:

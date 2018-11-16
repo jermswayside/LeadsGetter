@@ -4,7 +4,7 @@ import requests
 data = {
     'key': "EOQ89SMVP3K",
     'campaign': "email",
-    'textbook': ['1955'],
+    'textbook': ['9123315'],
     'email': "mwong@waysidepublishing.com",
     'firstname': "Michael",
     'lastname': "Wong",

@@ -296,7 +296,7 @@ def push_data_to(fn, url_pardot):
 
         # Enter POST request here
         curr_data = 1
-        log('Filling out Pardot form... \n')
+        log(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' Filling out Pardot form... \n')
         for data in all_data:
             log('%s/%s users\n' % (curr_data, len(all_data)))
             r = requests.post(url_pardot, data=data)
@@ -376,7 +376,7 @@ def push_data_to_ls(fn, url_ls):
             all_data.append(data)
 
     curr_d = 1
-    log('Adding samples for users...\n')
+    log(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' Adding samples for users...\n')
     for d in all_data:
         log("%s/%s users\n" % (curr_d, len(all_data)))
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -387,9 +387,17 @@ def push_data_to_ls(fn, url_ls):
 
 
 def log(text):
-    append_log = open("log.txt", "a")
+    append_log = open("log.txt", "a+")
     append_log.write(text)
     append_log.close()
+
+
+def cron_log(text):
+    with open("cronlog.txt", "a+") as c_log:
+        if text:
+            c_log.write(text)
+        else:
+            c_log.write("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
 
 
 def cleanup(errno):
@@ -406,7 +414,7 @@ def cleanup(errno):
 
 
 def main():
-    log("Cron ran at: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    cron_log()
 
     try:
         if os.path.isfile(lock_fn) is not True:
@@ -429,11 +437,11 @@ def main():
             # Deleting "archive.csv" and "delta.csv" if necessary, renames "new_data.csv" to "archive.csv"
             cleanup(0)
         else:
-            log('Lock file exists, process currently running')
+            cron_log('Lock file exists, process currently running')
             sys.exit(0)
 
     except Exception as error:
-        log(error)
+        cron_log(error)
         cleanup(1)
         sys.exit(1)
 

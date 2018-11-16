@@ -414,7 +414,7 @@ def cleanup(errno):
 
 
 def main():
-    cron_log()
+    cron_log(None)
 
     try:
         if os.path.isfile(lock_fn) is not True:
